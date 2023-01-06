@@ -12,6 +12,7 @@ const Dashboard = () => {
   const [results, setResults] = useState([]);
   const [searchInLastOneDay, setSearchInLastOneDay] = useState(0);
   const [searchInLastOneHour, setSearchInLastOneHour] = useState(0);
+  const [searchInLastNDays, setSearchInLastNDays] = useState([]);
   const [searchInfo, setSearchInfo] = useState({});
   let x = new Date("1945/08/15");
   //Date range states
@@ -83,8 +84,7 @@ const Dashboard = () => {
       const res = await axios.get(
         `http://localhost:8800/searchesInnDays/${sendStartDate}&${sendEndDate}`
       );
-      setSearchInLastOneHour(res.data.length);
-      console.log(res.data);
+      setSearchInLastNDays(res.data);
     } catch (err) {
       console.log(err);
     }
@@ -124,41 +124,66 @@ const Dashboard = () => {
           />
         </form>
         {searchInfo.totalhits ? <p>Results: {searchInfo.totalhits}</p> : ""}
+
+        <button className="button" type="submit" onClick={searchesInLastOneDay}>
+          No. of searches performed in last 1 day
+        </button>
+        <h3 style={{ margin: "20px" }}>{searchInLastOneDay}</h3>
+        <button
+          className="button"
+          type="submit"
+          onClick={searchesInLastOneHour}>
+          No. of searches performed in last 1 Hour
+        </button>
+        <h3 style={{ margin: "20px" }}>{searchInLastOneHour}</h3>
+
+        <DateRangePicker
+          minDate={x}
+          maxDate={startDate}
+          startDate={startDate}
+          startDateId="s_id"
+          endDate={endDate}
+          endDateId="e_id"
+          onDatesChange={({ startDate, endDate }) => {
+            setStartDate(startDate);
+            setEndDate(endDate);
+          }}
+          focusedInput={focusedInput}
+          onFocusChange={(e) => setFocusedInput(e)}
+          displayFormat="DD/MM/YYYY"
+          isOutsideRange={() => false}
+        />
+
+        <div className="mt-3 mb-1">
+          Start Date: {startDate && startDate.format("ll")}
+        </div>
+        <div>End Date: {endDate && endDate.format("ll")}</div>
+        <button className="button" type="submit" onClick={searchesInnDays}>
+          Get Search Data
+        </button>
       </header>
-      <button className="button" type="submit" onClick={searchesInLastOneDay}>
-        No. of searches performed in last 1 day
-      </button>
-      <h3>{searchInLastOneDay}</h3>
-      <button className="button" type="submit" onClick={searchesInLastOneHour}>
-        No. of searches performed in last 1 Hour
-      </button>
-      <h3>{searchInLastOneHour}</h3>
-
-      <DateRangePicker
-        minDate={x}
-        maxDate={startDate}
-        startDate={startDate}
-        startDateId="s_id"
-        endDate={endDate}
-        endDateId="e_id"
-        onDatesChange={({ startDate, endDate }) => {
-          setStartDate(startDate);
-          setEndDate(endDate);
-        }}
-        focusedInput={focusedInput}
-        onFocusChange={(e) => setFocusedInput(e)}
-        displayFormat="DD/MM/YYYY"
-      />
-      {console.log(startDate, "this is from me")}
-      {console.log(x)}
-
-      <div className="mt-3 mb-1">
-        Start Date: {startDate && startDate.format("ll")}
+      <div className="results">
+        {searchInLastNDays ? (
+          <table className="tabless">
+            <tr>
+              <th>Sr. No</th>
+              <th>Search Name</th>
+              <th>Date</th>
+            </tr>
+            {searchInLastNDays.map((val, i) => {
+              return (
+                <tr key={i}>
+                  <td>{val.pageid}</td>
+                  <td>{val.searchText}</td>
+                  <td>{new Date(val.time).toLocaleDateString()}</td>
+                </tr>
+              );
+            })}
+          </table>
+        ) : (
+          <label></label>
+        )}
       </div>
-      <div>End Date: {endDate && endDate.format("ll")}</div>
-      <button className="result" type="submit" onClick={searchesInnDays}>
-        Get Search Data
-      </button>
       <div className="results">
         {results.map((result, i) => {
           const url = `https://en.wikipedia.org/?curid=${result.pageid}`;
